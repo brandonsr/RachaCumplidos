@@ -1,0 +1,25 @@
+{
+  "name": "Racha de Cumplidos",
+  "short_name": "Cumplidos",
+  "description": "Mantén viva la racha de cumplidos diarios entre Tanya y Saúl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#2d1b4e",
+  "theme_color": "#4a2d6b",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
