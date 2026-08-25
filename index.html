@@ -249,7 +249,24 @@
 <!-- Install popup, injected dynamically -->
 <div id="installOverlay"></div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getFirestore, doc, getDoc, setDoc
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC1lHlkAmqbbwARrivEbRyA3ZZYhzZYfwo",
+  authDomain: "rachacumplidos.firebaseapp.com",
+  projectId: "rachacumplidos",
+  storageBucket: "rachacumplidos.firebasestorage.app",
+  messagingSenderId: "260803130971",
+  appId: "1:260803130971:web:57905a43537365a927b17e"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
 const PEOPLE = ['tanya', 'saul'];
 
 function todayStr() {
@@ -265,28 +282,30 @@ function dateDiffDays(a, b) {
 
 async function getEntries(person) {
   try {
-    const res = await window.storage.get('entries:' + person, true);
-    return res ? JSON.parse(res.value) : [];
+    const snap = await getDoc(doc(db, 'entries', person));
+    return snap.exists() ? (snap.data().list || []) : [];
   } catch (e) {
+    console.error('getEntries error', e);
     return [];
   }
 }
 
 async function saveEntries(person, entries) {
-  await window.storage.set('entries:' + person, JSON.stringify(entries), true);
+  await setDoc(doc(db, 'entries', person), { list: entries });
 }
 
 async function getStreakData() {
   try {
-    const res = await window.storage.get('streak-data', true);
-    return res ? JSON.parse(res.value) : { streak: 0, lastCompleteDate: null };
+    const snap = await getDoc(doc(db, 'meta', 'streak'));
+    return snap.exists() ? snap.data() : { streak: 0, lastCompleteDate: null };
   } catch (e) {
+    console.error('getStreakData error', e);
     return { streak: 0, lastCompleteDate: null };
   }
 }
 
 async function saveStreakData(data) {
-  await window.storage.set('streak-data', JSON.stringify(data), true);
+  await setDoc(doc(db, 'meta', 'streak'), data);
 }
 
 function renderEntries(person, entries) {
