@@ -231,17 +231,21 @@
 
 <div class="columns">
   <div class="column">
-    <h2>💜 Tanya</h2>
-    <textarea id="input-tanya" placeholder="Escribe un cumplido para Saúl..."></textarea>
+    <h2>💚 Tanya</h2>
+    <textarea id="input-tanya" placeholder="Escribe un cumplido para ti..."></textarea>
     <button id="btn-tanya">Enviar cumplido</button>
     <div class="entries" id="entries-tanya"></div>
   </div>
   <div class="column">
     <h2>💙 Saúl</h2>
-    <textarea id="input-saul" placeholder="Escribe un cumplido para Tanya..."></textarea>
+    <textarea id="input-saul" placeholder="Escribe un cumplido para ti..."></textarea>
     <button id="btn-saul">Enviar cumplido</button>
     <div class="entries" id="entries-saul"></div>
   </div>
+</div>
+
+<div style="max-width:900px; margin:16px auto 0;">
+  <button id="exportBtn" style="background:#4a2d6b; max-width:900px;">📄 Exportar CSV</button>
 </div>
 
 <div class="reset-link" id="resetLink">Reiniciar datos (borra todo)</div>
@@ -423,6 +427,8 @@ async function init() {
   document.getElementById('btn-tanya').addEventListener('click', () => submitCompliment('tanya'));
   document.getElementById('btn-saul').addEventListener('click', () => submitCompliment('saul'));
 
+  document.getElementById('exportBtn').addEventListener('click', exportCSV);
+
   document.getElementById('resetLink').addEventListener('click', async () => {
     if (!confirm('¿Seguro que quieres borrar toda la racha y los cumplidos?')) return;
     await saveEntries('tanya', []);
@@ -433,6 +439,52 @@ async function init() {
 }
 
 init();
+
+/* ---------------- Exportar CSV ---------------- */
+
+function csvEscape(value) {
+  const str = String(value ?? '');
+  if (/[",\n]/.test(str)) {
+    return '"' + str.replace(/"/g, '""') + '"';
+  }
+  return str;
+}
+
+async function exportCSV() {
+  const btn = document.getElementById('exportBtn');
+  btn.disabled = true;
+  btn.textContent = 'Generando...';
+
+  const NAMES = { tanya: 'Tanya', saul: 'Saúl' };
+  let rows = [];
+  for (const person of PEOPLE) {
+    const entries = await getEntries(person);
+    for (const e of entries) {
+      rows.push({ persona: NAMES[person], fecha: e.date, cumplido: e.text });
+    }
+  }
+  rows.sort((a, b) => a.fecha.localeCompare(b.fecha));
+
+  const header = ['Persona', 'Fecha', 'Cumplido'];
+  const lines = [header.join(',')];
+  for (const r of rows) {
+    lines.push([csvEscape(r.persona), csvEscape(r.fecha), csvEscape(r.cumplido)].join(','));
+  }
+  const csvContent = '\uFEFF' + lines.join('\r\n'); // BOM para que Excel lea acentos bien
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cumplidos_${todayStr()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  btn.disabled = false;
+  btn.textContent = '📄 Exportar CSV';
+}
 
 /* ---------------- PWA install logic ---------------- */
 
